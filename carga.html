@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<title>Practica Tau-prolog I</title>
+	<script src="tau-prolog.js"></script>
+</head>
+<body>
+	<div id="divBC"></div>
+
+	<p>Arriba se muestra una  Base de Conocimiento</p>
+
+	<input type="text" id="persona"/>
+	<input type="button" id="buscarMaterias" value="Buscar materias" onclick="buscarMaterias()"/>
+
+	<p id="respuestaMaterias">
+		Ponga el nombre de una persona en el input text y de clic 
+		en el boton para buscar las materias que cargo ese alumno.
+	</p>
+
+	<input type="button" id="buscarMateriasPro" value="Buscar materias profesionalizantes" onclick="buscarMateriasPro()"/>
+
+	<p id="respuestaMateriasPro">
+		De clic en el boton para buscar las materias que son profesionalizantes.
+	</p>
+
+	<input type="text" id="personaInter"/>
+	<input type="button" id="buscarMateriasInter" value="Buscar materias interdisciplinarias" onclick="buscarMateriasInter()"/>
+	
+	<p id="respuestaMateriasInter">
+		De clic en el boton para buscar las materias interdisciplinarias que cargo ese alumno.
+	</p>
+
+	<script id="carga.pl" type="text/prolog">
+		alumno(ana).
+		alumno(juan).
+		alumno(pepe).
+		alumno(rosa).
+
+		materia(generica,tics).
+		materia(generica, algebra).
+		materia(generica, taller_de_redaccion).
+		materia(interdisciplinaria, programacion_I).
+		materia(interdisciplinaria, programacion_estructurada).
+		materia(interdisciplinaria, programacion_orientada_a_objetos).
+		materia(profesionalizante,redes_de_computadoras).
+		materia(profesionalizante,programacion_avanzada).
+		materia(profesionalizante,programacion_web).
+		materia(profesionalizante,inteligencia_artificial).
+
+		toma_materia(ana, algebra).
+		toma_materia(ana, programacion_web).
+		toma_materia(ana, programacion_avanzada).
+		toma_materia(juan, programacion_I).
+		toma_materia(juan, taller_de_redaccion).
+		toma_materia(juan, programacion_estructurada).
+		toma_materia(juan, programacion_avanzada).
+		toma_materia(pepe, tics).
+		toma_materia(pepe, algebra).
+		toma_materia(rosa, inteligencia_artificial).
+		toma_materia(rosa, programacion_avanzada).
+
+		materias_inter(X,Y):-toma_materia(X,Y),materia(interdisciplinaria,Y).
+	</script>
+	<script>
+		function buscarMaterias(){
+			//crea el objeto principal
+			var session = pl.create();
+			//carga la base de conocimiento
+			session.consult("carga.pl");
+			//crea la pregunta a partir de los controles html
+			let p=document.getElementById("persona").value;
+			let pregunta="toma_materia("+p+", Y).";
+			//prepara nuestro elemento html id="respuesta" para la respuesta
+			let contenedor = document.getElementById("respuestaMaterias");
+			contenedor.innerHTML = p + " lleva: "
+			//carga la pregunta
+			session.query(pregunta);
+			//declaramos la funcion callback, 
+			//el parametro answer traera la respuesta encontrada
+			//enviada por session.answer
+			let callback = function( answer ) { 
+				//si no devuelve false queda al menos una respuesta
+				//y llamamos recursivamente a callback
+				if(answer!==false){
+					console.log("aun hay datos");
+					session.answer(callback);
+				}
+				console.log("la/el "+p+" lleva "+pl.format_answer( answer ) );
+				if(pl.type.is_substitution(answer)) {
+					// obtenemos el valor de la consulta
+					var materia = answer.lookup("Y");
+					//y la metemos en nuestro contenedor
+					contenedor.innerHTML = contenedor.innerHTML + materia+", ";
+				}
+			}
+			//buscamos la respuesta a la pregunta formulada, enviandole la
+			//funcion callback que sera ejecutada cuando se encuentre una respuesta
+			session.answer(callback);
+		}
+
+		function buscarMateriasPro(){
+			//crea el objeto principal
+			var session = pl.create();
+			//carga la base de conocimiento
+			session.consult("carga.pl");
+			//crea la pregunta a partir de los controles html
+			let p=document.getElementById("persona").value;
+			let pregunta="materia(profesionalizante, Y).";
+			//prepara nuestro elemento html id="respuesta" para la respuesta
+			let contenedor = document.getElementById("respuestaMateriasPro");
+			contenedor.innerHTML ="Las materias profesionalizantes son: "
+			//carga la pregunta
+			session.query(pregunta);
+			//declaramos la funcion callback, 
+			//el parametro answer traera la respuesta encontrada
+			//enviada por session.answer
+			let callback = function( answer ) { 
+				//si no devuelve false queda al menos una respuesta
+				//y llamamos recursivamente a callback
+				if(answer!==false){
+					console.log("aun hay datos");
+					session.answer(callback);
+				}
+				console.log("la/el "+p+" lleva "+pl.format_answer( answer ) );
+				if(pl.type.is_substitution(answer)) {
+					// obtenemos el valor de la consulta
+					var materiaPro = answer.lookup("Y");
+					//y la metemos en nuestro contenedor
+					contenedor.innerHTML = contenedor.innerHTML + materiaPro+", ";
+				}
+			}
+			//buscamos la respuesta a la pregunta formulada, enviandole la
+			//funcion callback que sera ejecutada cuando se encuentre una respuesta
+			session.answer(callback);
+		}
+
+		function buscarMateriasInter(){
+			//crea el objeto principal
+			var session = pl.create();
+			//carga la base de conocimiento
+			session.consult("carga.pl");
+			//crea la pregunta a partir de los controles html
+			let p=document.getElementById("personaInter").value;
+			let pregunta="materias_inter("+p+", Y).";
+			//prepara nuestro elemento html id="respuesta" para la respuesta
+			let contenedor = document.getElementById("respuestaMateriasInter");
+			contenedor.innerHTML = p + " lleva estas materias interdisciplinarias: "
+			//carga la pregunta
+			session.query(pregunta);
+			//declaramos la funcion callback, 
+			//el parametro answer traera la respuesta encontrada
+			//enviada por session.answer
+			let callback = function( answer ) { 
+				//si no devuelve false queda al menos una respuesta
+				//y llamamos recursivamente a callback
+				if(answer!==false){
+					console.log("aun hay datos");
+					session.answer(callback);
+				}
+				console.log("la/el "+p+" lleva "+pl.format_answer( answer ) );
+				if(pl.type.is_substitution(answer)) {
+					// obtenemos el valor de la consulta
+					var materiaInter = answer.lookup("Y");
+					//y la metemos en nuestro contenedor
+					contenedor.innerHTML = contenedor.innerHTML + materiaInter+", ";
+				}
+			}
+			//buscamos la respuesta a la pregunta formulada, enviandole la
+			//funcion callback que sera ejecutada cuando se encuentre una respuesta
+			session.answer(callback);
+		}
+
+		window.onload=function(){
+			let bc=document.getElementById("carga.pl").innerText;
+			document.getElementById("divBC").innerText=bc;
+		};
+	</script>
+</body>
+</html>
